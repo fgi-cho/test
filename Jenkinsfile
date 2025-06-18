@@ -26,8 +26,8 @@ pipeline {
                     // Ensure Terraform is available in the PATH
                     // If not, you might need to use a Docker agent with Terraform,
                     // or use the Terraform Jenkins plugin, or install it manually.
-            //        sh 'terraform version' // Verify terraform installation
-                    sh 'terraform init'
+                    sh 'terraform version' // Verify terraform installation
+            //        sh 'terraform init'
                     // If using workspaces:
                     // sh "terraform workspace select ${params.TF_WORKSPACE} || terraform workspace new ${params.TF_WORKSPACE}"
                 }
