@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: default # Ensure this matches K8S_NAMESPACE or remove if namespace is in Jenkinsfile
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 30080 # Port exposed by the service
+      targetPort: 80 # Port on the Nginx container
+  type: LoadBalancer # Or NodePort, ClusterIP as per your requirement
+

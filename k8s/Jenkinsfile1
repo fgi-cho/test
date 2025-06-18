@@ -1,0 +1,66 @@
+// Jenkinsfile
+pipeline {
+    agent any // Or specify a label for an agent with kubectl & git: agent { label 'kubernetes-agent' }
+
+    environment {
+        K8S_NAMESPACE = 'default' // Target Kubernetes namespace
+        // KUBECONFIG_CREDENTIAL_ID = 'your-kubeconfig-credentials-id' // Optional: Jenkins credential ID for kubeconfig
+        MANIFEST_PATH = 'k8s' // Directory containing your Kubernetes manifest files
+    }
+
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                echo 'Checking out source code...'
+                // Replace with your SCM checkout command, e.g., for Git:
+                // git url: 'https://your-repository-url.com/project.git', branch: 'main'
+                // For this example, we'll assume manifests are in the workspace
+                // In a real scenario, you'd check out your repo containing the k8s/ directory
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    echo "Deploying Nginx to namespace: ${K8S_NAMESPACE}"
+                    // If using Jenkins Kubernetes credentials plugin for kubeconfig:
+                    // withKubeconfig([credentialsId: KUBECONFIG_CREDENTIAL_ID]) {
+                    //     sh "kubectl apply -f ${MANIFEST_PATH}/nginx-deployment.yaml -n ${K8S_NAMESPACE}"
+                    //     sh "kubectl apply -f ${MANIFEST_PATH}/nginx-service.yaml -n ${K8S_NAMESPACE}"
+                    //     sh "kubectl rollout status deployment/nginx-deployment -n ${K8S_NAMESPACE} --timeout=120s"
+                    // }
+                    // If kubeconfig is already configured on the agent:
+                    sh "kubectl config current-context" // Verify context
+                    sh "kubectl apply -f ${MANIFEST_PATH}/nginx-deployment.yaml -n ${K8S_NAMESPACE}"
+                    sh "kubectl apply -f ${MANIFEST_PATH}/nginx-service.yaml -n ${K8S_NAMESPACE}"
+                    
+                    echo "Waiting for deployment to complete..."
+                    sh "kubectl rollout status deployment/nginx-deployment -n ${K8S_NAMESPACE} --timeout=120s"
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo "Verifying Nginx deployment..."
+                sh "kubectl get pods -n ${K8S_NAMESPACE} -l app=nginx"
+                sh "kubectl get service nginx-service -n ${K8S_NAMESPACE}"
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+            // cleanWs() // Optional: clean up workspace
+        }
+        success {
+            echo 'Nginx deployment successful!'
+        }
+        failure {
+            echo 'Nginx deployment failed.'
+            // Add notification steps here if needed
+        }
+    }
+}
+
