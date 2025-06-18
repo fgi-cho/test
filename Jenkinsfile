@@ -33,6 +33,43 @@ pipeline {
                 }
             }
         }
+        stage('Terraform Plan') {
+            when {
+                expression { params.TERRAFORM_ACTION == 'plan' || params.TERRAFORM_ACTION == 'apply' }
+            }
+            steps {
+                script {
+                    if (params.TERRAFORM_ACTION == 'apply') {
+                        sh 'terraform plan -out=tfplan -input=false'
+                        // Optional: Archive the plan file
+                        // archiveArtifacts artifacts: 'tfplan', fingerprint: true
+                    } else {
+                        sh 'terraform plan -input=false'
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Apply / Destroy') {
+            when {
+                expression { params.TERRAFORM_ACTION == 'apply' || params.TERRAFORM_ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    if (params.TERRAFORM_ACTION == 'apply') {
+                        // Optional: Add a manual approval step before applying
+                        // input message: "Proceed with Terraform Apply?", ok: "Apply"
+                        sh 'terraform apply -auto-approve -input=false tfplan' // Apply the saved plan
+                        // Or if not using a saved plan:
+                        // sh 'terraform apply -auto-approve -input=false'
+                    } else if (params.TERRAFORM_ACTION == 'destroy') {
+                        // Optional: Add a manual approval step before destroying
+                        // input message: "Proceed with Terraform Destroy?", ok: "Destroy"
+                        sh 'terraform destroy -auto-approve -input=false'
+                    }
+                }
+            }
+        }
     }
     post {
         always {
