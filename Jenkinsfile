@@ -20,7 +20,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
-//                    sh 'printenv'
+                    sh 'printenv | grep -i terraform'
   //                  sh 'which terraform'
                     // Ensure Terraform is available in the PATH
                     // If not, you might need to use a Docker agent with Terraform,
