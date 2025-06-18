@@ -1,12 +1,12 @@
 pipeline {
     agent any // Or specify a specific agent with Terraform installed
 
-    environment {
-        // Optional: Define environment variables for Terraform
-        // TF_VAR_region = 'us-east-1'
-        // AWS_ACCESS_KEY_ID = credentials('your-aws-credentials-id')
-        // AWS_SECRET_ACCESS_KEY = credentials('your-aws-credentials-id')
-    }
+#    environment {
+#        // Optional: Define environment variables for Terraform
+#        // TF_VAR_region = 'us-east-1'
+#        // AWS_ACCESS_KEY_ID = credentials('your-aws-credentials-id')
+#        // AWS_SECRET_ACCESS_KEY = credentials('your-aws-credentials-id')
+#    }
 
     parameters {
         choice(name: 'TERRAFORM_ACTION', choices: ['plan', 'apply', 'destroy'], description: 'Terraform action to perform')
