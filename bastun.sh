@@ -1,2 +1,3 @@
-#!/bin/bash \n" + 
+#!/bin/bash 
+\n
        "echo \"Hello from \$SHELL\"
