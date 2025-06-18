@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('fdfsdkfsdksdkdsksksksksdksks') {
+            steps {
+                script {
+       //             sh 'chmod +x ./bastun.sh'
+                    sh './bastun.sh'
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Terraform job finished.'
+            // Clean up workspace, tfplan, etc. if needed
+            // deleteDir()
+        }
+        success {
+            echo 'Terraform execution successful.'
+        }
+        failure {
+            echo 'Terraform execution failed.'
+        }
+    }
+}
