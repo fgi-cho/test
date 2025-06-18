@@ -27,7 +27,7 @@ pipeline {
                 }
             }
         }
-
+    }
     post {
         always {
             echo 'Terraform job finished.'
@@ -42,4 +42,3 @@ pipeline {
         }
     }
 }
-
