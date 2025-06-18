@@ -10,7 +10,7 @@ pipeline {
         stage('fdfsdkfsdksdkdsksksksksdksks') {
             steps {
                 script {
-       //             sh 'chmod +x ./bastun.sh'
+                    sh 'chmod +x ./bastun.sh'
                     sh './bastun.sh'
                 }
             }
