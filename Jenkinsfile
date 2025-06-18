@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        TERRAFORM_HOME = tool name: 'terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
+        TERRAFORM_HOME = tool name: 'terraform'
         PATH = "${TERRAFORM_HOME}:${env.PATH}"
     }
 //    parameters {
