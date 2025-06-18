@@ -16,6 +16,8 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
+                    sh 'printenv'
+                    sh 'which terraform'
                     // Ensure Terraform is available in the PATH
                     // If not, you might need to use a Docker agent with Terraform,
                     // or use the Terraform Jenkins plugin, or install it manually.
