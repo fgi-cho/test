@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    environment {
+        TERRAFORM_HOME = tool name: 'terraform', type: 'org.jenkinsci.plugins.terraform.TerraformInstallation'
+        PATH = "${TERRAFORM_HOME}:${env.PATH}"
+    }
 //    parameters {
 //        choice(name: 'TERRAFORM_ACTION', choices: ['plan', 'apply', 'destroy'], description: 'Terraform action to perform')
 //        // Add other parameters as needed, e.g., for different environments or variable files
