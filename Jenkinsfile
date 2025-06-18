@@ -1,6 +1,7 @@
 pipeline {
-    agent any // Or specify a specific agent with Terraform installed
-
+    agent {
+        docker { image 'hashicorp/terraform:latest' } // Use a Docker image with Terraform
+    }
     parameters {
         choice(name: 'TERRAFORM_ACTION', choices: ['plan', 'apply', 'destroy'], description: 'Terraform action to perform')
         // Add other parameters as needed, e.g., for different environments or variable files
