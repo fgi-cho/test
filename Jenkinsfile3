@@ -34,21 +34,10 @@ pipeline {
         )
     }
 
-    options {
-        buildDiscarder(logRotator(numToKeepStr: '200', artifactNumToKeepStr: '200'))
-        timeout(time: 1, unit: 'HOURS')
-        office365ConnectorWebhooks([
-            [
-                name: 'sport.team', notifyBackToNormal: true, notifyFailure: true, notifySuccess: true, notifyUnstable: true,
-                url: 'https://bulanet.webhook.office.com/webhookb2/18d12a6a-d9b9-4c43-92e5-f667b0cd3339@8ff30634-1704-43a2-aba3-3ea7b4bbca9a/JenkinsCI/fe49f193105c42058dec1a9e0c5ddd32/c57dddeb-1907-4875-93fd-c07e1b84974b'
-            ]
-        ])
-    }
-
     environment {
         IMAGE_NAME = "harbor.delasport.com/sb/${repo_name}"
         K8S_DEPLOY_REPO_SLUG = "k8s-sb-platform-authentication"        
-        GOOGLE_APPLICATION_CREDENTIALS = ".google/google-auth.json"
+     //   GOOGLE_APPLICATION_CREDENTIALS = ".google/google-auth.json"
     }
 
     stages {
@@ -74,54 +63,16 @@ pipeline {
           }
         }
 
-        stage('Clone docker repository'){
+
+
+        stage('fdfsdkfsdksdkdsksksksksdksks') {
             steps {
-                checkout scmGit(
-                    branches: [[name: '$commit_hash']],
-                    userRemoteConfigs: [[url: "git@bitbucket.org:delasport/${repo_name}.git", credentialsId: '52e57088-5929-47fe-8426-d1dd3cfb2d14']])
                 script {
-                    bitbucketStatusNotify(repoSlug: "${repo_name}", commitId: "${commit_hash}", buildState: 'INPROGRESS', buildKey: "${commit_hash}")
+                   echo ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env
+                
                 }
             }
         }
-
-        stage('Build & Publish docker image') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'a7590967-fbb1-4800-9ebe-83706fb09753', passwordVariable: 'HARBOR_PASSWORD', usernameVariable: 'HARBOR_USER')]) {
-                    sh '''
-                        set -x
-                        docker build --no-cache --tag ${IMAGE_NAME}:${commit_hash} --tag ${IMAGE_NAME}:latest -f Dockerfile .
-                        docker push ${IMAGE_NAME}:${commit_hash}
-                        docker push ${IMAGE_NAME}:latest
-                    '''
-                deleteDir()
-                }
-            }
-
-        }
-
-        stage('Deploy on speciffic env'){
-            steps {
-                withCredentials([sshUserPrivateKey(credentialsId: '52e57088-5929-47fe-8426-d1dd3cfb2d14', keyFileVariable: 'ssh_key', passphraseVariable: '', usernameVariable: '')]) {
-                    sh '''
-                        set -x                    
-                        GIT_SSH_COMMAND='ssh -i $ssh_key -o IdentitiesOnly=yes'
-                        git clone git@bitbucket.org:delasport/${K8S_DEPLOY_REPO_SLUG}.git
-                        cd ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env
-                        if [ "${branch_name}" = "master" ]; then
-                            cd prod
-                        else
-                            cd ${branch_name}
-                        fi                        
-                        git checkout master
-                        git config --global user.email 'jenkins@delasport.com'
-                        kustomize edit set image ${IMAGE_NAME}:${commit_hash}
-                        git commit -am "Publish version: $GIT_COMMIT"
-                        git push
-                    '''
-                }
-                deleteDir()
-            }
-        }
+   
     }
 }
