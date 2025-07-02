@@ -25,7 +25,7 @@ pipeline {
         stage('DagoDGD') {
             steps {
                  script {
-                    echo ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env
+                    println ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env
              
                     }
                 }
