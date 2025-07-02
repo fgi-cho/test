@@ -19,28 +19,6 @@ pipeline {
      //   GOOGLE_APPLICATION_CREDENTIALS = ".google/google-auth.json"
     }
 
-    stages {
-        stage('Validation') {
-          steps {
-            script {
-              if ( "$repo_name" == '' || "$branch_name" == '' || "$commit_hash" == '' ) {
-                currentBuild.result = 'ABORTED'
-                error('Commit ID, branch name, repo name cannot be empty. Please enter a valid value')
-              }
-              if ( "$commit_hash".length() != 40 && "$commit_hash" =~ /^[0-9a-fA-F]+$/) {
-                currentBuild.result = 'ABORTED'
-                error(" Wrong commit hash, please enter the proper value")
-              }
-
-              // Determine environment based on branch
-              if ("$branch_name" == "master") {
-                env.ENVIRONMENT = 'prod'
-              } else {
-                env.ENVIRONMENT = "$branch_name"
-              }
-            }
-          }
-        }
 
 
 
