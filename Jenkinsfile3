@@ -1,8 +1,6 @@
 
 pipeline {
-    agent { 
-        label 'docker'
-    }
+
 
     parameters {
         string(name: 'repo_name', defaultValue: '', description: 'Enter docker repository name (Example: bonus-sports-data-stream)')
