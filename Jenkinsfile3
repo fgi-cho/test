@@ -1,4 +1,4 @@
-
+o
 pipeline {
     agent any
 
@@ -25,7 +25,7 @@ pipeline {
         stage('DagoDGD') {
             steps {
                 sh '''
-                    println ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env
+                    echo ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env
              
                 '''    
                 }
