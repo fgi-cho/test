@@ -24,10 +24,10 @@ pipeline {
 
         stage('Da go DGD') {
             steps {
-             sh '''
-                   ls -la ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env
-             '''
-
+                 script {
+                    ls -la '${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env'
+             
+                    }
                 }
             }
         
