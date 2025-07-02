@@ -16,7 +16,7 @@ pipeline {
     environment {
         IMAGE_NAME = "harbor.delasport.com/sb/${repo_name}"
         K8S_DEPLOY_REPO_SLUG = "k8s-sb-platform-authentication"  
-        K8S_SVC = "${k8s_service}"
+     //   K8S_SVC = "${k8s_service}"
      //   GOOGLE_APPLICATION_CREDENTIALS = ".google/google-auth.json"
     }
 
@@ -25,7 +25,7 @@ pipeline {
         stage('DagoDGD') {
             steps {
                 sh '''
-                    echo ${K8S_DEPLOY_REPO_SLUG}/applications/${K8S_SVC}/env
+                    echo ${K8S_DEPLOY_REPO_SLUG}/applications/"${k8s_service}"/env
                      echo "${repo_name}"
                 '''    
                 }
