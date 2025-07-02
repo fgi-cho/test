@@ -1,0 +1,127 @@
+
+pipeline {
+    agent { 
+        label 'docker'
+    }
+
+    parameters {
+        string(name: 'repo_name', defaultValue: '', description: 'Enter docker repository name (Example: bonus-sports-data-stream)')
+        string(name: 'branch_name', defaultValue: '', description: 'Enter the branch name, where you have pushed a commit (Example: main)')
+        string(name: 'commit_hash', defaultValue: '', description: 'Enter the commit ID that you have made (Example: 660021df1dc7b03f42cd84cd7384797a5bd02f94)')
+        string(name: 'actor', defaultValue: '', description: 'Enter the actor name (Example: Artem Dovbyk)')
+        string(name: 'k8s_manifest_repo_name', defaultValue: '', description: 'Enter the repo name (Example: )')
+        string(name: 'k8s_service', defaultValue: '', description: 'Enter the repo name (Example: )')            
+    }
+
+    triggers {
+        GenericTrigger (
+            genericVariables: [
+                [ key: 'repo_name', value: '$.repository.name'],
+                [ key: 'branch_name', value: '$.push.changes[0].new.name'],
+                [ key: 'commit_hash', value: '$.push.changes[0].new.target.hash'],
+                [ key: 'actor', value: '$.actor.display_name']
+            ],
+            genericRequestVariables: [
+                [key: 'k8s_manifests_repo_name', regexpFilter: ''],
+                [key: 'k8sService', regexpFilter: '']
+            ],            
+            causeString: 'Generic cause. New commit $commit_hash was pushed in the $repo_name on the ${branch_name}',
+            token: 'platform-authentication',
+            printContributedVariables: true,
+            printPostContent: true,
+            regexpFilterText: '$branch_name',
+            regexpFilterExpression: '^dev$|^test$|^stg$' 
+        )
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '200', artifactNumToKeepStr: '200'))
+        timeout(time: 1, unit: 'HOURS')
+        office365ConnectorWebhooks([
+            [
+                name: 'sport.team', notifyBackToNormal: true, notifyFailure: true, notifySuccess: true, notifyUnstable: true,
+                url: 'https://bulanet.webhook.office.com/webhookb2/18d12a6a-d9b9-4c43-92e5-f667b0cd3339@8ff30634-1704-43a2-aba3-3ea7b4bbca9a/JenkinsCI/fe49f193105c42058dec1a9e0c5ddd32/c57dddeb-1907-4875-93fd-c07e1b84974b'
+            ]
+        ])
+    }
+
+    environment {
+        IMAGE_NAME = "harbor.delasport.com/sb/${repo_name}"
+        K8S_DEPLOY_REPO_SLUG = "k8s-sb-platform-authentication"        
+        GOOGLE_APPLICATION_CREDENTIALS = ".google/google-auth.json"
+    }
+
+    stages {
+        stage('Validation') {
+          steps {
+            script {
+              if ( "$repo_name" == '' || "$branch_name" == '' || "$commit_hash" == '' ) {
+                currentBuild.result = 'ABORTED'
+                error('Commit ID, branch name, repo name cannot be empty. Please enter a valid value')
+              }
+              if ( "$commit_hash".length() != 40 && "$commit_hash" =~ /^[0-9a-fA-F]+$/) {
+                currentBuild.result = 'ABORTED'
+                error(" Wrong commit hash, please enter the proper value")
+              }
+
+              // Determine environment based on branch
+              if ("$branch_name" == "master") {
+                env.ENVIRONMENT = 'prod'
+              } else {
+                env.ENVIRONMENT = "$branch_name"
+              }
+            }
+          }
+        }
+
+        stage('Clone docker repository'){
+            steps {
+                checkout scmGit(
+                    branches: [[name: '$commit_hash']],
+                    userRemoteConfigs: [[url: "git@bitbucket.org:delasport/${repo_name}.git", credentialsId: '52e57088-5929-47fe-8426-d1dd3cfb2d14']])
+                script {
+                    bitbucketStatusNotify(repoSlug: "${repo_name}", commitId: "${commit_hash}", buildState: 'INPROGRESS', buildKey: "${commit_hash}")
+                }
+            }
+        }
+
+        stage('Build & Publish docker image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'a7590967-fbb1-4800-9ebe-83706fb09753', passwordVariable: 'HARBOR_PASSWORD', usernameVariable: 'HARBOR_USER')]) {
+                    sh '''
+                        set -x
+                        docker build --no-cache --tag ${IMAGE_NAME}:${commit_hash} --tag ${IMAGE_NAME}:latest -f Dockerfile .
+                        docker push ${IMAGE_NAME}:${commit_hash}
+                        docker push ${IMAGE_NAME}:latest
+                    '''
+                deleteDir()
+                }
+            }
+
+        }
+
+        stage('Deploy on speciffic env'){
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: '52e57088-5929-47fe-8426-d1dd3cfb2d14', keyFileVariable: 'ssh_key', passphraseVariable: '', usernameVariable: '')]) {
+                    sh '''
+                        set -x                    
+                        GIT_SSH_COMMAND='ssh -i $ssh_key -o IdentitiesOnly=yes'
+                        git clone git@bitbucket.org:delasport/${K8S_DEPLOY_REPO_SLUG}.git
+                        cd ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env
+                        if [ "${branch_name}" = "master" ]; then
+                            cd prod
+                        else
+                            cd ${branch_name}
+                        fi                        
+                        git checkout master
+                        git config --global user.email 'jenkins@delasport.com'
+                        kustomize edit set image ${IMAGE_NAME}:${commit_hash}
+                        git commit -am "Publish version: $GIT_COMMIT"
+                        git push
+                    '''
+                }
+                deleteDir()
+            }
+        }
+    }
+}
