@@ -22,10 +22,10 @@ pipeline {
 
 
 
-        stage('fdfsdkfsdksdkdsksksksksdksks') {
+        stage('Da go DGD') {
             steps {
-            sh '''
-                   echo ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env}
+             sh '''
+                   ls -la ${K8S_DEPLOY_REPO_SLUG}/applications/${k8sService}/env}
              '''
 
                 }
