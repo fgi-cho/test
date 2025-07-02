@@ -13,26 +13,7 @@ pipeline {
         string(name: 'k8s_service', defaultValue: '', description: 'Enter the repo name (Example: )')            
     }
 
-    triggers {
-        GenericTrigger (
-            genericVariables: [
-                [ key: 'repo_name', value: '$.repository.name'],
-                [ key: 'branch_name', value: '$.push.changes[0].new.name'],
-                [ key: 'commit_hash', value: '$.push.changes[0].new.target.hash'],
-                [ key: 'actor', value: '$.actor.display_name']
-            ],
-            genericRequestVariables: [
-                [key: 'k8s_manifests_repo_name', regexpFilter: ''],
-                [key: 'k8sService', regexpFilter: '']
-            ],            
-            causeString: 'Generic cause. New commit $commit_hash was pushed in the $repo_name on the ${branch_name}',
-            token: 'platform-authentication',
-            printContributedVariables: true,
-            printPostContent: true,
-            regexpFilterText: '$branch_name',
-            regexpFilterExpression: '^dev$|^test$|^stg$' 
-        )
-    }
+
 
     environment {
         IMAGE_NAME = "harbor.delasport.com/sb/${repo_name}"
