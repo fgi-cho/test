@@ -21,13 +21,12 @@ pipeline {
     }
 
 
-
     stages {
         stage('DagoDGD') {
             steps {
                 sh '''
                     echo ${K8S_DEPLOY_REPO_SLUG}/applications/${K8S_SVC}/env
-             
+                     echo "${repo_name}"
                 '''    
                 }
             }
