@@ -16,7 +16,7 @@ pipeline {
     environment {
         IMAGE_NAME = "harbor.delasport.com/sb/${repo_name}"
         K8S_DEPLOY_REPO_SLUG = "k8s-sb-platform-authentication"  
-        K8S_SVC = "k8s_service"
+        K8S_SVC = "${k8s_service}"
      //   GOOGLE_APPLICATION_CREDENTIALS = ".google/google-auth.json"
     }
 
