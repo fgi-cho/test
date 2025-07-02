@@ -26,7 +26,7 @@ pipeline {
             steps {
                 sh '''
                     echo ${K8S_DEPLOY_REPO_SLUG}/applications/"${k8s_service}"/env
-                     echo "${repo_name}"
+                     echo ${repo_name}
                 '''    
                 }
             }
