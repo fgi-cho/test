@@ -26,8 +26,6 @@ pipeline {
             token: 'sports_services',
             printContributedVariables: true,
             printPostContent: true,
- //           regexpFilterText: '$branch_name $actor',
- //           regexpFilterExpression: '^(main|prod|dev|test|stage|master)[^\\s]*? (?!Jenkins)(.*)?$'
         )
     }
 
@@ -47,7 +45,6 @@ pipeline {
                     def commitHash = params.commit_hash ? params.commit_hash : env.GIT_COMMIT
                     def actorName = params.actor ? params.actor : "default-actor-name"
 
-                    env.DOCKER_IMAGE_NAME = "harbor.delasport.com/prod/${repoName}"
                     env.ENV_PREFIXED_IMAGE_HASH = "${branchName}-${commitHash}"
                     env.REPO_NAME = repoName
                     env.BRANCH_NAME = branchName
@@ -77,9 +74,6 @@ pipeline {
                 checkout scmGit(
                     branches: [[name: '$BRANCH_NAME']],
                     echo $BRANCH_NAME
-                script {
-                    bitbucketStatusNotify(repoSlug: "${REPO_NAME}", commitId: "${COMMIT_HASH}", buildState: 'INPROGRESS', buildKey: "${COMMIT_HASH}")
-                }
             }
         }
 
