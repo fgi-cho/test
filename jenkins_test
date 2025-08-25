@@ -73,7 +73,7 @@ pipeline {
             steps {
                 checkout scmGit(
                     branches: [[name: '$BRANCH_NAME']],
-                    echo $BRANCH_NAME
+                    echo "$BRANCH_NAME"
             }
         }
 
