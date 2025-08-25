@@ -1,4 +1,4 @@
-11pipeline {
+pipeline {
     agent {
         label 'docker'
     }
