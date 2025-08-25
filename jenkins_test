@@ -1,0 +1,147 @@
+pipeline {
+    agent {
+        label 'docker'
+    }
+
+    parameters {
+        string(name: 'repo_name', defaultValue: '', description: 'Enter docker repository name (Example: bonus-sports-data-stream)')
+        string(name: 'branch_name', defaultValue: '', description: 'Enter the branch name, where you have pushed a commit (Example: main)')
+        string(name: 'commit_hash', defaultValue: '', description: 'Enter the commit ID that you have made (Example: 660021df1dc7b03f42cd84cd7384797a5bd02f94)')
+        string(name: 'actor', defaultValue: '', description: 'Enter the actor name (Example: Artem Dovbyk)')
+        string(name: 'k8s_application', defaultValue: '', description: 'Enter the repo name (Example: )')
+    }
+
+    triggers {
+        GenericTrigger (
+            genericVariables: [
+                [ key: 'repo_name', value: '$.repository.name'],
+                [ key: 'branch_name', value: '$.push.changes[0].new.name'],
+                [ key: 'commit_hash', value: '$.push.changes[0].new.target.hash'],
+                [ key: 'actor', value: '$.actor.display_name']
+            ],
+            genericRequestVariables: [
+                [key: 'k8s_application', regexpFilter: ''],
+            ],
+            causeString: 'Generic cause. New commit $commit_hash was pushed in the $repo_name on the $branch_name',
+            token: 'sports_services',
+            printContributedVariables: true,
+            printPostContent: true,
+ //           regexpFilterText: '$branch_name $actor',
+ //           regexpFilterExpression: '^(main|prod|dev|test|stage|master)[^\\s]*? (?!Jenkins)(.*)?$'
+        )
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '180', artifactNumToKeepStr: '180'))
+        timeout(time: 1, unit: 'HOURS')
+        timestamps ()
+    }
+
+    stages {
+
+        stage('Set Environment Variables') {
+            steps {
+                script {
+                    def repoName = params.repo_name ? params.repo_name : ''
+                    def branchName = params.branch_name ? params.branch_name : cleanBranchName(env.GIT_BRANCH)
+                    def commitHash = params.commit_hash ? params.commit_hash : env.GIT_COMMIT
+                    def actorName = params.actor ? params.actor : "default-actor-name"
+
+                    env.DOCKER_IMAGE_NAME = "harbor.delasport.com/prod/${repoName}"
+                    env.ENV_PREFIXED_IMAGE_HASH = "${branchName}-${commitHash}"
+                    env.REPO_NAME = repoName
+                    env.BRANCH_NAME = branchName
+                    env.COMMIT_HASH = commitHash
+                    env.ACTOR_NAME = actorName
+                }
+            }
+        }
+
+        stage('Validation') {
+            steps {
+                script {
+                    if ("$REPO_NAME" == '' || "$BRANCH_NAME" == '' || "$COMMIT_HASH" == '') {
+                        currentBuild.result = 'ABORTED'
+                        error('Commit ID, branch name, repo name cannot be empty. Please enter a valid value')
+                    }
+                    if ("$COMMIT_HASH".length() != 40 && "$COMMIT_HASH" =~ /^[0-9a-fA-F]+$/) {
+                        currentBuild.result = 'ABORTED'
+                        error("Wrong commit hash, please enter the proper value")
+                    }
+                }
+            }
+        }
+
+        stage('Clone repository'){
+            steps {
+                checkout scmGit(
+                    branches: [[name: '$BRANCH_NAME']],
+                    echo $BRANCH_NAME
+                script {
+                    bitbucketStatusNotify(repoSlug: "${REPO_NAME}", commitId: "${COMMIT_HASH}", buildState: 'INPROGRESS', buildKey: "${COMMIT_HASH}")
+                }
+            }
+        }
+
+        stage('Build & Publish docker image per environment') {
+            when {
+                anyOf {
+                    branch "master";
+                    branch "dev";
+                    branch "test";
+                    branch "stage";
+                }
+            }
+            steps {
+                    sh  '''
+                        echo $ban
+                    '''
+                }
+            }
+        }
+
+        stage('Update dev image hash in ') {
+            when {
+                branch "dev"
+            }
+
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: '52e57088-5929-47fe-8426-d1dd3cfb2d14', keyFileVariable: 'ssh_key', passphraseVariable: '', usernameVariable: '')]) {
+                    sh '''
+                        echo "BLAaaaaaaaaa"
+                        # Check for changes before committing
+                        if ! git diff-index --quiet HEAD; then
+                            git commit -am "Update dev image version: ${DOCKER_IMAGE_NAME}:${ENV_PREFIXED_IMAGE_HASH}"
+                            git push
+                        else
+                            echo 'Nothing to commit'
+                        fi
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            script {
+                bitbucketStatusNotify(repoSlug: "${REPO_NAME}", commitId: "${COMMIT_HASH}", buildState: 'SUCCESSFUL', buildKey: "${COMMIT_HASH}")
+            }
+        }
+        unsuccessful {
+            script {
+                bitbucketStatusNotify(repoSlug: "${REPO_NAME}", commitId: "${COMMIT_HASH}", buildState: 'FAILED', buildKey: "${COMMIT_HASH}")
+            }
+        }
+        always {
+            script {
+                currentBuild.description = "R: ${REPO_NAME} Branch: ${BRANCH_NAME} Image: ${DOCKER_IMAGE_NAME}:${ENV_PREFIXED_IMAGE_HASH}"
+            }
+            cleanWs()
+        }
+    }
+}
+
+def cleanBranchName(branchName) {
+    return
+}
