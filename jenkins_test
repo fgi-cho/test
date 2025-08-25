@@ -69,13 +69,7 @@ pipeline {
             }
         }
 
-        stage('Clone repository'){
-            steps {
-                checkout scmGit(
-                    branches: [[name: '$BRANCH_NAME']],
-                    echo "$BRANCH_NAME")
-            }
-        }
+
 
         stage('Build & Publish docker image per environment') {
             when {
@@ -88,7 +82,7 @@ pipeline {
             }
             steps {
                     sh  '''
-                        echo $ban
+                            echo 'Blabalbdfsfigsfius to commit'
                     '''
                 }
             }
@@ -105,8 +99,7 @@ pipeline {
                         echo "BLAaaaaaaaaa"
                         # Check for changes before committing
                         if ! git diff-index --quiet HEAD; then
-                            git commit -am "Update dev image version: ${DOCKER_IMAGE_NAME}:${ENV_PREFIXED_IMAGE_HASH}"
-                            git push
+                            echo 'Comit comit to commit'
                         else
                             echo 'Nothing to commit'
                         fi
