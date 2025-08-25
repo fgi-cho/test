@@ -127,7 +127,7 @@ pipeline {
             cleanWs()
         }
     }
-}
+
 
 def cleanBranchName(branchName) {
     return
