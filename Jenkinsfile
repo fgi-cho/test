@@ -6,6 +6,7 @@ pipeline {
     }
     parameters {
         choice(name: 'TERRAFORM_ACTION', choices: ['plan', 'apply', 'destroy'], description: 'Terraform action to perform')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'test', 'stg', 'prod'], description: 'The deployment environment to target')
         // Add other parameters as needed, e.g., for different environments or variable files
         // string(name: 'TF_WORKSPACE', defaultValue: 'default', description: 'Terraform workspace to use')
     }
@@ -21,6 +22,7 @@ pipeline {
             steps {
                 script {
                     sh 'printenv | grep -i terraform'
+                    echo "gsgsgsgsdgd: $param.ENVIRONMENT"
     //                sh 'sleep 60'
   //                  sh 'which terraform'
                     // Ensure Terraform is available in the PATH
