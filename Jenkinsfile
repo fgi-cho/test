@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     sh 'printenv | grep -i terraform'
-                    echo "gsgsgsgsdgd: $BRANCH"
+                    echo "gsgsgsgsdgd: ${BRANCH}"
     //                sh 'sleep 60'
   //                  sh 'which terraform'
                     // Ensure Terraform is available in the PATH
